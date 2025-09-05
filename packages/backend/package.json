@@ -1,0 +1,36 @@
+{
+  "name": "asl-gateway-server",
+  "version": "1.0.0",
+  "description": "WebRTC Gateway Server with ASL Recognition Integration",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test.js",
+    "test:local": "NODE_ENV=development node test.js",
+    "test:prod": "NODE_ENV=production node test.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "wrtc": "^0.4.7",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "webrtc",
+    "asl",
+    "sign-language",
+    "ai",
+    "real-time"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

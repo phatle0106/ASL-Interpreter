@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ASL Recognition with AI Sentence Generation</title>
+    <style>
+        :root{
+            --bg:#0f172a; --panel:#0b1220; --muted:#8ea0b8; --text:#e5e7eb;
+            --accent:#22c55e; --accent-2:#3b82f6; --border:rgba(148,163,184,.18);
+            --radius:16px; --shadow:0 10px 25px rgba(0,0,0,.35);
+        }
+
+        @media (prefers-color-scheme: light){
+            :root{ --bg:#f8fafc; --panel:#ffffff; --muted:#475569; --text:#0f172a; --border:rgba(15,23,42,.1); }
+        }
+
+        *{ box-sizing:border-box }
+
+        body{
+            margin:0; 
+            font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial; 
+            background:var(--bg); 
+            color:var(--text); 
+            min-height:100dvh;
+        }
+
+        .shell{
+            max-width:1400px; 
+            margin:24px auto; 
+            padding:0 16px; 
+            display:grid; 
+            grid-template-columns: 1.1fr .9fr; 
+            gap:18px;
+        }
+
+        @media (max-width: 960px){ .shell{ grid-template-columns: 1fr; } }
+
+        .video-card{
+            background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01)),var(--panel); 
+            border:1px solid var(--border); 
+            border-radius:calc(var(--radius) + 8px); 
+            box-shadow:var(--shadow); 
+            overflow:hidden;
+        }
+
+        .video-header{
+            display:flex; 
+            align-items:center; 
+            justify-content:space-between; 
+            padding:12px 16px; 
+            border-bottom:1px solid var(--border)
+        }
+
+        .video-title{
+            display:flex; 
+            align-items:center; 
+            gap:10px; 
+            font-weight:700
+        }
+
+        .dot{
+            width:10px;
+            height:10px;
+            border-radius:999px;
+            background:#ef4444; 
+            box-shadow:0 0 0 3px rgba(239,68,68,.15) inset
+        }
+
+        .dot.connected{ background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.15) inset }
+
+        .badges{
+            display:flex; 
+            gap:10px; 
+            align-items:center
+        }
+
+        .badge{
+            font-size:12px;
+            padding:4px 8px; 
+            border-radius:999px; 
+            border:1px solid var(--border); 
+            color:var(--muted)
+        }
+        .badge.ok{ color:#16a34a; border-color:rgba(22,163,74,.45)}
+
+        .video-wrap{
+            position: relative;
+            aspect-ratio: 16 / 9;
+            min-height: 320px;
+            background:radial-gradient(600px 300px at 60% -10%, rgba(59,130,246,.12), transparent 60%);
+        }
+
+        video, canvas{
+            position:absolute; 
+            inset:0; 
+            width:100%; 
+            height:100%; 
+            object-fit:cover;
+        }
+
+        video{ background:#000; }
+
+        .card{
+            background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01)),var(--panel); 
+            border:1px solid var(--border); 
+            border-radius:calc(var(--radius) + 8px); 
+            box-shadow:var(--shadow); 
+            overflow:hidden; 
+            display:grid; 
+            grid-template-rows:auto 1fr; 
+            max-height:75dvh;
+        }
+
+        .card header{
+            padding:12px 16px; 
+            display:flex; 
+            align-items:center; 
+            justify-content:space-between; 
+            gap:12px; 
+            border-bottom:1px solid var(--border)
+        }
+
+        .actions{
+            display:flex; 
+            gap:8px;
+            flex-wrap: wrap;
+        }
+
+        .btn{
+            padding:8px 12px;
+            border-radius:10px;
+            border:1px solid var(--border); 
+            background:rgba(255,255,255,.04); 
+            color:var(--text); 
+            cursor:pointer; 
+            font-weight:600;
+            transition: all 0.2s ease;
+            font-size: 12px;
+        }
+
+        .btn:hover{ background:rgba(255,255,255,.08); }
+
+        .btn.primary{
+            background:linear-gradient(135deg,var(--accent),var(--accent-2)); 
+            color:#fff; 
+            border:none
+        }
+
+        .btn.secondary{
+            background:linear-gradient(135deg,#f59e0b,#d97706); 
+            color:#fff; 
+            border:none
+        }
+
+        .btn:disabled{
+            opacity:0.5;
+            cursor:not-allowed;
+        }
+
+        .messages{
+            padding:16px; 
+            overflow:auto; 
+            display:flex; 
+            flex-direction:column; 
+            gap:12px; 
+            min-height:260px;
+        }
+
+        .msg{
+            max-width:85%; 
+            padding:12px 14px; 
+            border-radius:14px; 
+            border:1px solid var(--border); 
+            line-height:1.45; 
+            word-break:break-word; 
+            background:rgba(255,255,255,.03);
+        }
+
+        .msg.ai{
+            margin-right:auto; 
+            background:rgba(59,130,246,.12); 
+            border-color:rgba(59,130,246,.35)
+        }
+
+        .msg.sentence{
+            margin: 0 auto;
+            background:rgba(34,197,94,.15); 
+            border-color:rgba(34,197,94,.4);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .msg.system{
+            margin:0 auto;
+            background:rgba(34,197,94,.12);
+            border-color:rgba(34,197,94,.35);
+            font-size:14px;
+            color:var(--muted);
+        }
+
+        .msg.gloss{
+            margin-left:auto;
+            background:rgba(168,85,247,.12);
+            border-color:rgba(168,85,247,.35);
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .status{
+            padding:8px 12px;
+            background:rgba(255,255,255,.05);
+            border-radius:8px;
+            font-size:14px;
+            margin-top:8px;
+        }
+
+        .current-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-panel {
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .info-title {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .info-content {
+            font-size: 14px;
+            min-height: 20px;
+            font-family: monospace;
+        }
+
+        .sentence-display {
+            background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(59,130,246,.1));
+            border: 2px solid rgba(34,197,94,.3);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .error{ color:#ef4444; }
+        .success{ color:#22c55e; }
+        .warning{ color:#f59e0b; }
+
+        .hidden{ display:none; }
+
+        .fps-counter{
+            position:absolute;
+            top:8px;
+            right:8px;
+            background:rgba(0,0,0,0.7);
+            color:white;
+            padding:4px 8px;
+            border-radius:4px;
+            font-size:12px;
+            font-family:monospace;
+        }
+
+        .stats {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: monospace;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+
+<body> 
+    <div class="shell">
+        <!-- Left: video -->
+        <div class="container">
+            <section class="video-card">
+                <div class="video-header">
+                    <div class="video-title">
+                        <span class="dot" id="connection-dot"></span> 
+                        <span>ASL Recognition + AI Sentences</span>
+                    </div>
+                    <div class="badges">
+                        <span class="badge" id="camera-status">Camera Off</span>
+                        <span class="badge" id="connection-status">Disconnected</span>
+                        <span class="badge" id="i3d-status">I3D Ready</span>
+                        <span class="badge" id="t5-status">T5 Ready</span>
+                    </div>
+                </div>
+                <div class="video-wrap">
+                    <video id="video" autoplay playsinline muted></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    <div class="fps-counter" id="fps-counter">FPS: 0</div>
+                    <div class="stats" id="stats">
+                        Glosses: 0<br>
+                        Sentences: 0
+                    </div>
+                </div>
+            </section>
+            
+            <div class="status" id="status">Ready to connect...</div>
+        </div>
+
+        <!-- Right: AI responses -->
+        <main class="card">
+            <header>
+                <h3>ASL Recognition & Sentences</h3>
+                <div class="actions">
+                    <button id="toggleCamera" class="btn">Start Camera</button>
+                    <button id="connectAI" class="btn primary" disabled>Connect to AI</button>
+                    <button id="generateSentence" class="btn secondary" disabled>Generate Sentence</button>
+                    <button id="resetSession" class="btn" disabled>Reset</button>
+                </div>
+            </header>
+            
+            <div class="current-info">
+                <div class="info-panel">
+                    <div class="info-title">Current Glosses</div>
+                    <div class="info-content" id="current-glosses">-</div>
+                </div>
+                <div class="info-panel sentence-display">
+                    <div class="info-title">Latest Sentence</div>
+                    <div class="info-content" id="current-sentence">-</div>
+                </div>
+            </div>
+            
+            <section id="messages" class="messages">
+                <div class="msg system">Welcome! Start your camera and connect to AI to begin ASL recognition with sentence generation.</div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Configuration
+        const GATEWAY_URL = 'https://asl-system-backend-1.onrender.com'; // Use current origin
+        const FPS_TARGET = 10; // frames per second to send
+
+        // DOM elements
+        const $video = document.getElementById('video');
+        const $canvas = document.getElementById('canvas');
+        const $messages = document.getElementById('messages');
+        const $toggleCamera = document.getElementById('toggleCamera');
+        const $connectAI = document.getElementById('connectAI');
+        const $generateSentence = document.getElementById('generateSentence');
+        const $resetSession = document.getElementById('resetSession');
+        const $connectionDot = document.getElementById('connection-dot');
+        const $cameraStatus = document.getElementById('camera-status');
+        const $connectionStatus = document.getElementById('connection-status');
+        const $i3dStatus = document.getElementById('i3d-status');
+        const $t5Status = document.getElementById('t5-status');
+        const $status = document.getElementById('status');
+        const $fpsCounter = document.getElementById('fps-counter');
+        const $stats = document.getElementById('stats');
+        const $currentGlosses = document.getElementById('current-glosses');
+        const $currentSentence = document.getElementById('current-sentence');
+
+        // State
+        let localStream = null;
+        let peerConnection = null;
+        let dataChannel = null;
+        let isConnected = false;
+        let frameCount = 0;
+        let lastFpsTime = Date.now();
+        let glossCount = 0;
+        let sentenceCount = 0;
+        let currentGlossSequence = [];
+        let sessionId = null;
+
+        // FPS counter and stats
+        function updateFPS() {
+            const now = Date.now();
+            if (now - lastFpsTime >= 1000) {
+                $fpsCounter.textContent = `FPS: ${frameCount}`;
+                $stats.innerHTML = `Glosses: ${glossCount}<br>Sentences: ${sentenceCount}`;
+                frameCount = 0;
+                lastFpsTime = now;
+            }
+        }
+
+        // Add message to chat
+        function addMessage(text, type = 'ai', extra = {}) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            
+            if (type === 'sentence') {
+                div.innerHTML = `<strong>Generated:</strong> "${text}"`;
+                if (extra.glosses) {
+                    div.innerHTML += `<br><small>From: ${extra.glosses.join(' ')}</small>`;
+                }
+            } else if (type === 'gloss') {
+                div.innerHTML = `<strong>Gloss:</strong> ${text}`;
+            } else {
+                div.textContent = text;
+            }
+            
+            $messages.appendChild(div);
+            $messages.scrollTop = $messages.scrollHeight;
+        }
+
+        // Update UI status
+        function updateStatus(message, type = '') {
+            $status.textContent = message;
+            $status.className = `status ${type}`;
+        }
+
+        // Start camera
+        async function startCamera() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    },
+                    audio: false
+                });
+                
+                $video.srcObject = localStream;
+                await $video.play();
+                
+                // Setup canvas
+                $canvas.width = $video.videoWidth || 640;
+                $canvas.height = $video.videoHeight || 480;
+                
+                $toggleCamera.textContent = 'Stop Camera';
+                $cameraStatus.textContent = 'Camera On';
+                $cameraStatus.classList.add('ok');
+                $connectAI.disabled = false;
+                
+                updateStatus('Camera started. Ready to connect to AI.', 'success');
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                updateStatus('Failed to access camera. Please allow camera permissions.', 'error');
+            }
+        }
+
+        // Stop camera
+        function stopCamera() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            $video.srcObject = null;
+            $toggleCamera.textContent = 'Start Camera';
+            $cameraStatus.textContent = 'Camera Off';
+            $cameraStatus.classList.remove('ok');
+            $connectAI.disabled = true;
+            
+            // Disconnect AI if connected
+            if (isConnected) {
+                disconnectAI();
+            }
+            
+            updateStatus('Camera stopped.');
+        }
+
+        // Create WebRTC connection to gateway
+        async function connectToAI() {
+            try {
+                if (!localStream) {
+                    updateStatus('Camera not started!', 'error');
+                    return;
+                }
+
+                updateStatus('Connecting to AI services...');
+                
+                // Create peer connection
+                peerConnection = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' }
+                    ]
+                });
+
+                // Add local video track
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                // Create data channel for receiving AI results
+                dataChannel = peerConnection.createDataChannel('results');
+                
+                dataChannel.onopen = () => {
+                    console.log('Data channel opened');
+                    isConnected = true;
+                    updateConnectionUI(true);
+                    updateStatus('Connected to AI! Analyzing ASL...', 'success');
+                    startFrameCapture();
+                };
+                
+                dataChannel.onclose = () => {
+                    console.log('Data channel closed');
+                    isConnected = false;
+                    updateConnectionUI(false);
+                    stopFrameCapture();
+                };
+                
+                dataChannel.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleAIMessage(data);
+                    } catch (e) {
+                        console.error('Error parsing AI response:', e);
+                    }
+                };
+
+                // Handle ICE connection state
+                peerConnection.oniceconnectionstatechange = () => {
+                    console.log('ICE connection state:', peerConnection.iceConnectionState);
+                    if (peerConnection.iceConnectionState === 'failed' || 
+                        peerConnection.iceConnectionState === 'disconnected') {
+                        disconnectAI();
+                    }
+                };
+
+                // Create and send offer
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                // Send offer to gateway
+                const response = await fetch(`${GATEWAY_URL}/offer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sdp: peerConnection.localDescription.sdp,
+                        type: peerConnection.localDescription.type,
+                        userId: `user_${Date.now()}`
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Gateway responded with ${response.status}`);
+                }
+
+                const answer = await response.json();
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                
+                sessionId = answer.session_id;
+                console.log('Session ID:', sessionId);
+
+            } catch (error) {
+                console.error('Connection error:', error);
+                updateStatus(`Connection failed: ${error.message}`, 'error');
+                disconnectAI();
+            }
+        }
+
+        // Handle AI messages
+        function handleAIMessage(data) {
+            switch (data.type) {
+                case 'system':
+                    addMessage(data.text, 'system');
+                    if (data.asl_ready) $i3dStatus.classList.add('ok');
+                    if (data.t5_ready) $t5Status.classList.add('ok');
+                    break;
+                    
+                case 'asl_result':
+                    if (data.recognition) {
+                        addMessage(data.recognition, 'gloss');
+                        glossCount++;
+                        currentGlossSequence.push(data.recognition);
+                        if (currentGlossSequence.length > 10) {
+                            currentGlossSequence = currentGlossSequence.slice(-10);
+                        }
+                        $currentGlosses.textContent = currentGlossSequence.join(' ');
+                    }
+                    
+                    if (data.generated_sentence) {
+                        $currentSentence.textContent = data.generated_sentence;
+                    }
+                    break;
+                    
+                case 'sentence_generated':
+                    addMessage(data.sentence, 'sentence', { glosses: data.glosses });
+                    sentenceCount++;
+                    $currentSentence.textContent = data.sentence;
+                    if (data.manual_request) {
+                        addMessage('Sentence generated on request', 'system');
+                    }
+                    break;
+                    
+                case 'sentence_error':
+                    addMessage(`Sentence generation error: ${data.error}`, 'system');
+                    updateStatus(`T5 Error: ${data.error}`, 'error');
+                    break;
+                    
+                case 'current_sentence':
+                    if (data.sentence) {
+                        $currentSentence.textContent = data.sentence;
+                        addMessage(`Current sentence: "${data.sentence}"`, 'system');
+                    }
+                    break;
+                    
+                case 'error':
+                    addMessage(`Error: ${data.text}`, 'system');
+                    break;
+                    
+                default:
+                    if (data.text && data.confidence > 0.7) {
+                        addMessage(data.text);
+                    }
+                    break;
+            }
+        }
+
+        // Disconnect from AI
+        function disconnectAI() {
+            if (dataChannel) {
+                try { dataChannel.close(); } catch (e) {}
+                dataChannel = null;
+            }
+            
+            if (peerConnection) {
+                try { peerConnection.close(); } catch (e) {}
+                peerConnection = null;
+            }
+            
+            isConnected = false;
+            sessionId = null;
+            stopFrameCapture();
+            updateConnectionUI(false);
+            updateStatus('Disconnected from AI.');
+            
+            // Reset counters
+            glossCount = 0;
+            sentenceCount = 0;
+            currentGlossSequence = [];
+            $currentGlosses.textContent = '-';
+            $currentSentence.textContent = '-';
+        }
+
+        // Update connection UI
+        function updateConnectionUI(connected) {
+            if (connected) {
+                $connectionDot.classList.add('connected');
+                $connectionStatus.textContent = 'Connected';
+                $connectionStatus.classList.add('ok');
+                $connectAI.textContent = 'Disconnect AI';
+                $generateSentence.disabled = false;
+                $resetSession.disabled = false;
+            } else {
+                $connectionDot.classList.remove('connected');
+                $connectionStatus.textContent = 'Disconnected';
+                $connectionStatus.classList.remove('ok');
+                $connectAI.textContent = 'Connect to AI';
+                $generateSentence.disabled = true;
+                $resetSession.disabled = true;
+                $i3dStatus.classList.remove('ok');
+                $t5Status.classList.remove('ok');
+            }
+        }
+
+        // Frame capture and sending
+        let frameInterval = null;
+
+        function startFrameCapture() {
+            if (frameInterval) return;
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 640;
+            canvas.height = 480;
+
+            frameInterval = setInterval(() => {
+                if (!$video.videoWidth || !isConnected) return;
+                
+                // Draw current video frame to canvas
+                ctx.drawImage($video, 0, 0, canvas.width, canvas.height);
+                
+                // Convert to base64 and send
+                canvas.toBlob(async (blob) => {
+                    if (blob && dataChannel && dataChannel.readyState === 'open') {
+                        try {
+                            const arrayBuffer = await blob.arrayBuffer();
+                            const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+                            
+                            dataChannel.send(JSON.stringify({
+                                type: 'frame',
+                                data: base64,
+                                timestamp: Date.now()
+                            }));
+                            
+                            frameCount++;
+                            updateFPS();
+                        } catch (e) {
+                            console.error('Error sending frame:', e);
+                        }
+                    }
+                }, 'image/jpeg', 0.8);
+                
+            }, 1000 / FPS_TARGET);
+        }
+
+        function stopFrameCapture() {
+            if (frameInterval) {
+                clearInterval(frameInterval);
+                frameInterval = null;
+            }
+        }
+
+        // Manual sentence generation
+        function generateSentence() {
+            if (dataChannel && dataChannel.readyState === 'open') {
+                dataChannel.send(JSON.stringify({
+                    type: 'generate_sentence',
+                    timestamp: Date.now()
+                }));
+                addMessage('Requesting sentence generation...', 'system');
+            }
+        }
+
+        // Reset session
+        function resetSession() {
+            if (dataChannel && dataChannel.readyState === 'open') {
+                dataChannel.send(JSON.stringify({
+                    type: 'reset_asl',
+                    timestamp: Date.now()
+                }));
+                
+                // Reset local state
+                glossCount = 0;
+                sentenceCount = 0;
+                currentGlossSequence = [];
+                $currentGlosses.textContent = '-';
+                $currentSentence.textContent = '-';
+                
+                addMessage('Session reset requested...', 'system');
+            }
+        }
+
+        // Event listeners
+        $toggleCamera.addEventListener('click', async () => {
+            if (localStream) {
+                stopCamera();
+            } else {
+                await startCamera();
+            }
+        });
+
+        $connectAI.addEventListener('click', async () => {
+            if (isConnected) {
+                disconnectAI();
+            } else {
+                await connectToAI();
+            }
+        });
+
+        $generateSentence.addEventListener('click', generateSentence);
+        $resetSession.addEventListener('click', resetSession);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopFrameCapture();
+            disconnectAI();
+            stopCamera();
+        });
+
+        // Demo functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add demo button
+            const demoBtn = document.createElement('button');
+            demoBtn.className = 'btn';
+            demoBtn.textContent = 'Demo';
+            demoBtn.onclick = runDemo;
+            document.querySelector('.actions').appendChild(demoBtn);
+        });
+
+        function runDemo() {
+            const demoMessages = [
+                { text: 'Demo started...', type: 'system' },
+                { text: 'hello', type: 'gloss' },
+                { text: 'my', type: 'gloss' },
+                { text: 'name', type: 'gloss' },
+                { text: 'john', type: 'gloss' },
+                { text: 'Hello, my name is John.', type: 'sentence', extra: { glosses: ['hello', 'my', 'name', 'john'] } },
+                { text: 'Demo completed!', type: 'system' }
+            ];
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < demoMessages.length) {
+                    const msg = demoMessages[i++];
+                    addMessage(msg.text, msg.type, msg.extra);
+                    
+                    if (msg.type === 'gloss') {
+                        glossCount++;
+                        currentGlossSequence.push(msg.text);
+                        $currentGlosses.textContent = currentGlossSequence.join(' ');
+                    } else if (msg.type === 'sentence') {
+                        sentenceCount++;
+                        $currentSentence.textContent = msg.text;
+                    }
+                } else {
+                    clearInterval(interval);
+                }
+            }, 1500);
+        }
+    </script>
+</body>
+
+</html>
