@@ -19,17 +19,7 @@ There are two runnable apps:
   - `requirements.txt` — base dependencies for inference
 
 
-## Quick demo (optional)
-- Put a short screen recording or GIF of each flow here:
-  - Local OpenCV demo → `docs/assets/local_infer_demo.gif`
-  - Streamlit UI flow → `docs/assets/streamlit_ui.gif`
-
-Once you add them, reference like:
-
-```markdown
-![Local demo](docs/assets/local_infer_demo.gif)
-![Streamlit UI](docs/assets/streamlit_ui.gif)
-```
+![Streamlit UI](docs/assets/demo_gif.gif)
 
 
 ## Requirements
