@@ -1,4 +1,4 @@
-### Bright of Sign — Real‑time ASL Word Recognition to Text
+### Real‑time ASL Word Recognition to Text
 
 This is a real‑time American Sign Language (ASL) word‑level recognition project built on the I3D architecture. It recognizes glosses (word labels) from webcam video and can optionally turn the recognized gloss sequence into a natural English sentence using Google's Gemini Flash API.
 
@@ -25,7 +25,7 @@ There are two runnable apps:
 ## Requirements
 - OS: Windows, macOS, or Linux
 - Python: 3.9.x recommended (tested with 3.9.7)
-- CUDA compatible GPU
+- CUDA: 11.x recommended (tested with 11.8)
 - Webcam
 
 
@@ -53,10 +53,7 @@ cd models/I3D
 pip install -r requirements.txt
 
 # Torch: pick a build for your platform/CUDA (examples)
-# CPU only
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-
-# or CUDA 11.x example (adjust to your GPU/CUDA)
+# CUDA 11.x example (adjust to your GPU/CUDA)
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 
 # Extras used by the apps (if not present from requirements)
@@ -147,12 +144,12 @@ streamlit run gem_infer.py
 - Improve the UI/UX, add background removal, and export recognized text.
 
 ## Contributors
-- Le Tran Tan Phat [(@phatle0106)](https://github.com/phatle0106)
-- Nguyen Gia Huy [(@KamonHuiz)](https://github.com/KamonHuiz)
-- Nguyen Ho Quang Khai [(@Cocobaut)](https://github.com/Cocobaut)
-- Chu Minh Nguyen [(@CmnguyenK106)](https://github.com/CmnguyenK106)
-- Ho Hong Phuc Nguyen [(@nguyenhohongphuc)](https://github.com/nguyenhohongphuc)
-- Mentor: Nguyen Duy Tan [(@DTan1101)](https://github.com/DTan1101)
+- Le Tran Tan Phat ([@phatle0106](https://github.com/phatle0106))
+- Nguyen Gia Huy ([@KamonHuiz](https://github.com/KamonHuiz))
+- Nguyen Ho Quang Khai ([@Cocobaut](https://github.com/Cocobaut))
+- Chu Minh Nguyen ([@CmnguyenK106](https://github.com/CmnguyenK106))
+- Ho Hong Phuc Nguyen ([@nguyenhohongphuc](https://github.com/nguyenhohongphuc))
+- Mentor: Nguyen Duy Tan ([@DTan1101](https://github.com/DTan1101))
 
 
 ## Acknowledgements
