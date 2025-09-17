@@ -1,6 +1,6 @@
 ### Bright of Sign — Real‑time ASL Word Recognition to Text
 
-Bright of Sign is a real‑time American Sign Language (ASL) word‑level recognition project built on the I3D architecture. It recognizes glosses (word labels) from webcam video and can optionally turn the recognized gloss sequence into a natural English sentence using Google's Gemini Flash API.
+This is a real‑time American Sign Language (ASL) word‑level recognition project built on the I3D architecture. It recognizes glosses (word labels) from webcam video and can optionally turn the recognized gloss sequence into a natural English sentence using Google's Gemini Flash API.
 
 There are two runnable apps:
 - **Local Inference (`local_infer.py`)**: Minimal OpenCV window; shows live recognized gloss. Optional background segmentation via MediaPipe.
@@ -25,15 +25,15 @@ There are two runnable apps:
 ## Requirements
 - OS: Windows, macOS, or Linux
 - Python: 3.9.x recommended (tested with 3.9.7)
-- GPU optional (CUDA) — improves FPS
+- CUDA compatible GPU
 - Webcam
 
 
 ## Setup
 1) Clone
 ```bash
-git clone <this-repo-url>
-cd nhom7-bright-of-sign
+git clone https://github.com/phatle0106/ASL-Interpreter
+cd ASL-Interpreter
 ```
 
 2) Create and activate a virtual environment
@@ -145,18 +145,15 @@ streamlit run gem_infer.py
 ## Contributing / Next steps
 - Add more classes or train on larger datasets (`archived/` contains configs/weights for other class counts).
 - Improve the UI/UX, add background removal, and export recognized text.
-- Add `docs/assets/*.gif` demo media for quick onboarding.
 
 ## Contributors
 - Le Tran Tan Phat [(@phatle0106)](https://github.com/phatle0106)
-- Nguyen Gia Huy (@)
-- Nguyen Ho Quang Khai (@)
-- Chu Minh Nguyen (@)
-- Ho Hong Phuc Nguyen (@)
+- Nguyen Gia Huy [(@KamonHuiz)](https://github.com/KamonHuiz)
+- Nguyen Ho Quang Khai [(@Cocobaut)](https://github.com/Cocobaut)
+- Chu Minh Nguyen [(@CmnguyenK106)](https://github.com/CmnguyenK106)
+- Ho Hong Phuc Nguyen [(@nguyenhohongphuc)](https://github.com/nguyenhohongphuc)
+- Mentor: Nguyen Duy Tan [(@DTan1101)](https://github.com/DTan1101)
 
 
 ## Acknowledgements
 Built as part of Python & ML 2025 Course, EE - ML & IoT Laboratory, Ho Chi Minh city University of Technology
-
-## License
-Add your license information here.
